@@ -103,7 +103,18 @@ function place(i) {
   G.cells[i] = INVADER;
   G.err = G.err.filter(e => e !== i);
   renderCell(i); renderHUD(); save();
+  flashCollected(G.cells.filter(s => s === INVADER).length - 1);
   if (isComplete(P, G.cells)) setTimeout(win, 350);
+}
+
+// Flash blanc sur l'envahisseur qui s'allume dans la barre du haut.
+function flashCollected(k) {
+  const el = $("counter").children[k];
+  if (!el || reducedMotion()) return;
+  el.classList.remove("got");
+  void el.getBoundingClientRect(); // relance l'animation
+  el.classList.add("got");
+  el.addEventListener("animationend", () => el.classList.remove("got"), { once: true });
 }
 
 function attempt(i) {
