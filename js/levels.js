@@ -38,5 +38,8 @@ export function puzzleFor(level) {
   return p;
 }
 
+// 3 paliers affichés : 0 facile (vert), 1 moyen (orange), 2 difficile (rouge, inclut « Expert »).
+export const diffTier = score => (score < 15 ? 0 : score < 30 ? 1 : 2);
+
 export const diffLabel = score =>
   score < 15 ? "Facile" : score < 30 ? "Moyen" : score < 55 ? "Difficile" : "Expert";

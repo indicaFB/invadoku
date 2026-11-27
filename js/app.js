@@ -1,8 +1,8 @@
 // Interface du jeu : rendu, gestes, bonus, fenêtres, écran d'accueil.
-import { puzzleFor, diffLabel } from "./levels.js";
+import { puzzleFor, diffTier } from "./levels.js";
 import { EMPTY, CROSS, LOCKED, INVADER, isSolution, isComplete, rowOf, colOf } from "./rules.js";
 import { findHint } from "./hints.js";
-import { INVADER_SVG, CROSS_SVG, HEART_SVG, hydrateIcons } from "./sprites.js";
+import { INVADER_SVG, CROSS_SVG, HEART_SVG, hydrateIcons, difficultySVG } from "./sprites.js";
 import { loadState, saveState, defaultState } from "./storage.js";
 import { explode } from "./fx.js";
 
@@ -62,8 +62,11 @@ function build() {
     return d;
   });
   $("counter").innerHTML = INVADER_SVG.repeat(n);
-  $("lvl").textContent = "Niveau : " + S.level;
-  $("diff").textContent = `${n}×${n} · ${diffLabel(P.score)}`;
+  $("lvl").textContent = "Niv " + S.level;
+  $("diff").innerHTML = difficultySVG(diffTier(P.score));
+  const label = `Difficulté : ${["facile", "moyenne", "difficile"][diffTier(P.score)]}`;
+  $("diff").title = label;
+  $("diff").setAttribute("aria-label", label);
 }
 
 function renderCell(i) {
