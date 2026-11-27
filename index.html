@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="fr" data-version="0.1.0">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Invadoku</title>
+<meta name="description" content="Puzzle logique en pixel art : un envahisseur par ligne, colonne et zone.">
+<meta name="theme-color" content="#0E1124">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Invadoku">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preload" href="fonts/press-start-2p-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="lvl-line"><h1 id="lvl">Niveau : 1</h1><span class="diff" id="diff"></span></div>
+    <div class="menu-wrap">
+      <button class="icon-btn" id="btnMenu" aria-label="Menu" aria-expanded="false" aria-controls="menu"><span data-pix="menu"></span></button>
+      <div class="menu" id="menu" hidden>
+        <button id="btnRules"><span data-pix="info"></span>Règles</button>
+        <button id="btnSettings"><span data-pix="gear"></span>Réglages</button>
+      </div>
+    </div>
+  </header>
+  <div class="status">
+    <div class="hearts" id="hearts" aria-label="Vies"></div>
+    <div class="counter" id="counter" aria-label="Envahisseurs placés"></div>
+  </div>
+  <div class="play">
+  <div class="board"><div class="grid" id="grid"></div></div>
+  <div class="explain" id="explain" hidden><div class="explain-head"><span data-pix="bulb"></span>Indice</div><p id="explainText"></p><button class="btn ghost" id="explainOk">Compris</button></div>
+  </div>
+  <div class="bonuses">
+    <button class="bonus" id="bSearch"><span class="tile"><span data-pix="radar"></span></span><span class="badge" id="cSearch">0</span>Radar</button>
+    <button class="bonus" id="bHint"><span class="tile"><span data-pix="bulb"></span></span><span class="badge" id="cHint">0</span>Indice</button>
+  </div>
+</div>
+<div class="splash" id="splash">
+  <h1 class="logo" aria-label="Invadoku"></h1>
+  <div class="march" aria-hidden="true"><div class="fleet" id="fleet"></div></div>
+  <div class="splash-grid" id="splashGrid" aria-hidden="true"></div>
+  <button class="btn" id="play">Jouer</button>
+  <p class="small">Un envahisseur par ligne, colonne et zone</p>
+</div>
+<canvas id="fx" aria-hidden="true"></canvas>
+<div class="toast" id="toast" role="status"></div>
+<div class="modal" id="modal" hidden><div class="sheet" id="sheet"></div></div>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
