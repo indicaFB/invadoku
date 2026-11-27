@@ -10,8 +10,9 @@ Node.js 18 ou plus.
 
 ```bash
 npm start          # http://localhost:8080
-npm test           # 20 tests : générateur, difficulté, indices, sauvegarde
+npm test           # 21 tests : générateur, difficulté, indices, sauvegarde
 npm run icons      # régénère les icônes PNG depuis le sprite
+npm run artifact   # dist/invadoku.html : le jeu en une seule page (aperçu claude.ai)
 ```
 
 Le service worker et les modules JavaScript demandent un serveur HTTP : ouvrir `index.html` en double-clic ne suffit pas.
@@ -36,7 +37,7 @@ js/
   generator.js        grilles à solution unique (graine fixe par niveau)
   rater.js            note de difficulté (coût des déductions)
   levels.js           progression : taille par tranche, difficulté montante
-  hints.js            indice expliqué (prochaine déduction)
+  hints.js            indice en deux temps : où regarder, puis raisonnement pas à pas
   rules.js            règles et états de case
   sprites.js          sprites pixel en SVG
   storage.js          sauvegarde locale versionnée (migrate)
@@ -46,7 +47,7 @@ icons/                icônes PNG générées par tools/make-icons.mjs
 manifest.webmanifest  identité de l'app installée
 sw.js                 cache hors ligne
 tests/                node --test
-tools/                serveur local, génération d'icônes
+tools/                serveur local, icônes, page unique pour l'artifact
 ```
 
 ## Publier une nouvelle version

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr" data-version="0.2.0">
+<html lang="fr" data-version="0.3.0">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -35,7 +35,17 @@
   </div>
   <div class="play">
   <div class="board"><div class="grid" id="grid"></div></div>
-  <div class="explain" id="explain" hidden><div class="explain-head"><span data-pix="bulb"></span>Indice</div><p id="explainText"></p><button class="btn ghost" id="explainOk">Compris</button></div>
+  <div class="explain" id="explain" hidden>
+    <div class="explain-head"><span data-pix="bulb"></span><span>Indice</span><span class="technique" id="explainTitle"></span></div>
+    <p class="look" id="explainLook"></p>
+    <ol id="explainSteps" hidden></ol>
+    <p class="tip" id="explainTip" hidden></p>
+    <div class="explain-actions">
+      <button class="btn ghost" id="explainSelf">Je cherche</button>
+      <button class="btn" id="explainMore">Voir l'explication</button>
+      <button class="btn ghost" id="explainOk" hidden>Compris</button>
+    </div>
+  </div>
   </div>
   <div class="bonuses">
     <button class="bonus" id="bSearch"><span class="tile"><span data-pix="radar"></span></span><span class="badge" id="cSearch">0</span>Radar</button>

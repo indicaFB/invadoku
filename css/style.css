@@ -66,12 +66,26 @@ h1{font:400 clamp(13px,3.8vw,18px)/1.2 var(--font-pixel);white-space:nowrap;marg
 @keyframes glow{50%{filter:brightness(1.35)}}
 .won .cell.inv svg{animation:dance .6s ease-in-out infinite alternate}
 @keyframes dance{to{transform:translateY(-12%)}}
-.explain{width:100%;background:var(--panel);border:2px solid var(--accent);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+/* Indice : panneau qui monte du bas, la grille reste visible au-dessus */
+.explain{position:fixed;z-index:12;left:50%;bottom:0;transform:translateX(-50%);width:min(520px,100%);max-height:52vh;overflow:auto;
+  background:var(--panel);border:2px solid var(--accent);border-bottom:0;border-radius:16px 16px 0 0;
+  padding:14px max(16px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
+  display:flex;flex-direction:column;gap:10px;box-shadow:0 -10px 30px rgba(0,0,0,.45);animation:sheetUp .22s ease-out}
+@keyframes sheetUp{from{transform:translate(-50%,100%)}to{transform:translate(-50%,0)}}
+.hint-open .play{justify-content:flex-start}
+.explain .technique{font:500 12px var(--font-body);color:var(--muted);text-transform:none;letter-spacing:.02em}
 .explain-head{display:flex;align-items:center;gap:8px;font:400 11px/1 var(--font-pixel);color:var(--accent);text-transform:uppercase}
 .explain-head svg{width:18px;height:18px}
 .explain p{margin:0;line-height:1.5;font-size:15px}
-.explain .btn{align-self:flex-end;padding:8px 14px;font-size:14px}
-.cell.focus{box-shadow:inset 0 0 0 3px var(--ink)}
+.explain .btn{padding:8px 14px;font-size:14px}
+.explain .look{font-weight:500}
+.explain ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px;line-height:1.45;font-size:14.5px}
+.explain ol li::marker{color:var(--accent);font-weight:700}
+.explain .tip{margin:0;background:var(--bg);border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.45}
+.explain .tip b{color:var(--accent)}
+.explain-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.cell.focus{box-shadow:inset 0 0 0 3px var(--fg)}
+.grid.has-focus .cell:not(.focus){filter:brightness(.45) saturate(.6)}
 .cell.hl{animation:glow .9s 3}
 .bonuses{display:flex;gap:22px;justify-content:center;flex-wrap:wrap;padding-top:8px}
 .bonus{position:relative;width:86px;display:flex;flex-direction:column;align-items:center;gap:8px;background:none;border:0;color:var(--muted);font:500 13px var(--font-body);cursor:pointer}

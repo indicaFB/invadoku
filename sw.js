@@ -1,7 +1,7 @@
 // Service worker : met tout le jeu en cache pour jouer hors ligne.
 // À chaque version publiée, changer VERSION (et data-version dans index.html) :
 // l'ancien cache est supprimé et les joueurs reçoivent les nouveaux fichiers.
-const VERSION = "0.2.0";
+const VERSION = "0.3.0";
 const CACHE = `invadoku-${VERSION}`;
 const FILES = [
   "./",

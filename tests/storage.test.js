@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { load, save, migrate, defaultState, SCHEMA } from "../js/storage.js";
+import { loadState as load, saveState as save, migrate, defaultState, SCHEMA } from "../js/storage.js";
 
 const memory = () => { const m = new Map(); return { getItem: k => m.get(k) ?? null, setItem: (k, v) => m.set(k, v) }; };
 

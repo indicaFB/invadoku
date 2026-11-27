@@ -1,7 +1,7 @@
 // Sprites pixel art, dessinés en SVG (un <rect> par pixel).
-export const INVADER = ["...XXX...", ".XXXXXXX.", "XXXXXXXXX", "XX.XXX.XX", "XXXXXXXXX", "..X.X.X..", ".X.X.X.X.", "X.X...X.X"];
-const CROSS = ["XX.....XX", "XXX...XXX", ".XXX.XXX.", "..XXXXX..", "...XXX...", "..XXXXX..", ".XXX.XXX.", "XXX...XXX", "XX.....XX"];
-const HEART = [".XX.XX.", "XXXXXXX", "XXXXXXX", ".XXXXX.", "..XXX..", "...X..."];
+export const INVADER_PIXELS = ["...XXX...", ".XXXXXXX.", "XXXXXXXXX", "XX.XXX.XX", "XXXXXXXXX", "..X.X.X..", ".X.X.X.X.", "X.X...X.X"];
+const CROSS_PIXELS = ["XX.....XX", "XXX...XXX", ".XXX.XXX.", "..XXXXX..", "...XXX...", "..XXXXX..", ".XXX.XXX.", "XXX...XXX", "XX.....XX"];
+const HEART_PIXELS = [".XX.XX.", "XXXXXXX", "XXXXXXX", ".XXXXX.", "..XXX..", "...X..."];
 const ICONS = {
   menu: ["XXXXXXX", ".......", "XXXXXXX", ".......", "XXXXXXX"],
   info: [".XXXXX.", "XX.X.XX", "XXXXXXX", "XX..XXX", "XXX.XXX", "XXX.XXX", ".XXXXX."],
@@ -20,9 +20,9 @@ function pixelSVG(rows, { cls = "", fill = "currentColor" } = {}) {
   return `<svg${cls ? ` class="${cls}"` : ""} viewBox="0 0 ${m} ${m}" fill="${fill}" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`;
 }
 
-export const INVADER_SVG = pixelSVG(INVADER);
-export const CROSS_SVG = pixelSVG(CROSS, { cls: "x" });
-export const HEART_SVG = pixelSVG(HEART, { fill: "var(--danger)" });
+export const INVADER_SVG = pixelSVG(INVADER_PIXELS);
+export const CROSS_SVG = pixelSVG(CROSS_PIXELS, { cls: "x" });
+export const HEART_SVG = pixelSVG(HEART_PIXELS, { fill: "var(--danger)" });
 export const iconSVG = name => pixelSVG(ICONS[name]);
 
 // Remplace chaque <span data-pix="nom"> par son icône.

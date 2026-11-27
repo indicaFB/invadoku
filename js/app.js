@@ -3,17 +3,17 @@ import { puzzleFor, diffLabel } from "./levels.js";
 import { EMPTY, CROSS, LOCKED, INVADER, isSolution, isComplete, rowOf, colOf } from "./rules.js";
 import { findHint } from "./hints.js";
 import { INVADER_SVG, CROSS_SVG, HEART_SVG, hydrateIcons } from "./sprites.js";
-import { load, save as persist, defaultState } from "./storage.js";
+import { loadState, saveState, defaultState } from "./storage.js";
 import { explode } from "./fx.js";
 
 const $ = id => document.getElementById(id);
 const grid = $("grid");
 const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-let S = load();
+let S = loadState();
 let P = null;          // grille courante { n, reg, sol, score, level }
 let cellEls = [];
-const save = () => persist(S);
+const save = () => saveState(S);
 
 /* ---------- Partie ---------- */
 function newGame() {
@@ -138,7 +138,7 @@ function cellAt(x, y) {
   return c && grid.contains(c) ? +c.dataset.i : null;
 }
 grid.addEventListener("pointerdown", e => {
-  if (!$("explain").hidden) clearHint();
+  if (grid.classList.contains("has-focus") || !$("explain").hidden) clearHint();
   const i = cellAt(e.clientX, e.clientY);
   if (i === null || S.game.hearts <= 0) return;
   const s = S.game.cells[i];
@@ -179,28 +179,62 @@ $("bSearch").onclick = () => {
   toast("Radar : cases sans envahisseur barrées");
 };
 
+// Indice en deux temps : 1) où regarder (on peut chercher seul), 2) le raisonnement pas à pas.
+// Un indice payé reste disponible gratuitement tant que la grille n'a pas changé.
+let pendingHint = null; // { hint, sig, level }
+const boardSig = () => S.game.cells.join("");
+
 function clearHint() {
   cellEls.forEach(d => d.classList.remove("focus", "hl"));
+  grid.classList.remove("has-focus");
   $("explain").hidden = true;
+  document.body.classList.remove("hint-open");
 }
-function showHint(h) {
-  clearHint();
-  $("explainText").textContent = h.text;
+function setPanel({ title, look, steps = null, tip = null, stage }) {
+  $("explainTitle").textContent = title;
+  $("explainLook").textContent = look;
+  $("explainSteps").hidden = !steps;
+  $("explainSteps").innerHTML = "";
+  (steps || []).forEach(t => { const li = document.createElement("li"); li.textContent = t; $("explainSteps").appendChild(li); });
+  $("explainTip").hidden = !tip;
+  $("explainTip").innerHTML = "";
+  if (tip) { const b = document.createElement("b"); b.textContent = "À retenir : "; $("explainTip").append(b, tip); }
+  $("explainSelf").hidden = $("explainMore").hidden = stage !== "look";
+  $("explainOk").hidden = stage !== "steps";
   $("explain").hidden = false;
-  h.focus.forEach(i => cellEls[i].classList.add("focus"));
-  h.cells.forEach(i => cellEls[i].classList.add("hl"));
+  document.body.classList.add("hint-open");
 }
-$("bHint").onclick = () => {
-  if (!S.bonus.hint) return toast("Plus d'indice disponible");
-  if (S.game.hearts <= 0) return;
-  const h = findHint(P, S.game.cells), G = S.game;
-  S.bonus.hint--;
+function showLook(h) {
+  clearHint();
+  h.focus.forEach(i => cellEls[i].classList.add("focus"));
+  grid.classList.add("has-focus");
+  setPanel({ title: "", look: `${h.look} Une déduction s'y cache.`, stage: "look" });
+}
+function showSteps(h) {
+  const G = S.game;
+  pendingHint = null;
   if (h.kind === "fix") { G.cells[h.cells[0]] = EMPTY; renderCell(h.cells[0]); }
   else if (h.kind === "cross") h.cells.forEach(i => { G.cells[i] = CROSS; renderCell(i); });
-  renderHUD(); save();
+  save();
   if (h.kind === "place") place(h.cells[0]);
-  showHint(h);
+  clearHint();
+  h.focus.forEach(i => cellEls[i].classList.add("focus"));
+  h.cells.forEach(i => cellEls[i].classList.add("focus", "hl"));
+  grid.classList.add("has-focus");
+  setPanel({ title: `· ${h.technique}`, look: h.look, steps: h.steps, tip: h.tip, stage: "steps" });
+}
+$("bHint").onclick = () => {
+  if (S.game.hearts <= 0) return;
+  if (pendingHint && pendingHint.level === S.level && pendingHint.sig === boardSig()) return showSteps(pendingHint.hint);
+  if (!S.bonus.hint) return toast("Plus d'indice disponible");
+  const hint = findHint(P, S.game.cells);
+  S.bonus.hint--;
+  renderHUD(); save();
+  pendingHint = { hint, sig: boardSig(), level: S.level };
+  showLook(hint);
 };
+$("explainMore").onclick = () => { if (pendingHint) showSteps(pendingHint.hint); };
+$("explainSelf").onclick = () => { $("explain").hidden = true; document.body.classList.remove("hint-open"); toast("Touchez Indice pour revoir l'explication"); };
 $("explainOk").onclick = clearHint;
 
 /* ---------- Fenêtres ---------- */
@@ -263,7 +297,7 @@ function showRules(onClose) {
     <li>1 tap : croix. 2<sup>e</sup> tap sur une croix : envahisseur.</li>
     <li>Glissez le doigt pour poser ou retirer des croix en série.</li>
     <li>Un envahisseur mal placé coûte une vie. 3 vies par niveau. Sans faute, les envahisseurs explosent.</li>
-    <li><b>Radar</b> barre 5 cases vides. <b>Indice</b> montre la prochaine déduction et l'explique.</li>
+    <li><b>Radar</b> barre 5 cases vides. <b>Indice</b> montre d'abord où regarder, puis le raisonnement pas à pas.</li>
     </ul><button class="btn" id="ok">Compris</button>`);
   $("ok").onclick = () => { closeModal(); onClose?.(); };
 }
@@ -314,6 +348,6 @@ hydrateIcons();
 startLevel(S.level, { animate: false }); // la vague part quand l'écran d'accueil se ferme
 setupSplash(S.level === 1 && S.game.cells.every(s => s === EMPTY));
 
-if ("serviceWorker" in navigator && location.protocol !== "file:") {
+if ("serviceWorker" in navigator && location.protocol !== "file:" && document.documentElement.dataset.build !== "artifact") {
   navigator.serviceWorker.register("./sw.js").catch(() => { /* hors-ligne indisponible */ });
 }

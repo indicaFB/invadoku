@@ -1,7 +1,7 @@
 // Génère les icônes PNG de l'app (sans dépendance) : node tools/make-icons.mjs
 import { writeFileSync } from "node:fs";
 import { deflateSync } from "node:zlib";
-import { INVADER } from "../js/sprites.js";
+import { INVADER_PIXELS as INVADER } from "../js/sprites.js";
 
 const BG = [0x0e, 0x11, 0x24], FG = [0x9d, 0x93, 0xff], SHADOW = [0x2b, 0x30, 0x58];
 

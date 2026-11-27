@@ -22,10 +22,10 @@ export function migrate(raw) {
   return s;
 }
 
-export function load(storage = globalThis.localStorage) {
+export function loadState(storage = globalThis.localStorage) {
   try { return migrate(JSON.parse(storage.getItem(KEY))); } catch { return defaultState(); }
 }
 
-export function save(state, storage = globalThis.localStorage) {
+export function saveState(state, storage = globalThis.localStorage) {
   try { storage.setItem(KEY, JSON.stringify(state)); } catch { /* stockage indisponible : on joue sans sauvegarde */ }
 }

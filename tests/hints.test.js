@@ -39,3 +39,21 @@ test("une croix posée sur la bonne case est signalée en premier", () => {
   assert.equal(h.kind, "fix");
   assert.equal(h.cells[0], good);
 });
+
+test("chaque indice dit où regarder, détaille le raisonnement et donne une règle à retenir", () => {
+  for (const level of [9, 30, 60]) {
+    const P = puzzleFor(level), cells = new Array(P.n * P.n).fill(EMPTY);
+    for (let k = 0; k < 200 && !isComplete(P, cells); k++) {
+      const h = findHint(P, cells);
+      assert.match(h.look, /^Regarde /);
+      assert.ok(h.steps.length >= 2, h.technique);
+      assert.ok(h.tip.length > 20, h.technique);
+      assert.ok(!h.steps.some(s => /: \.|de les /.test(s)), `tournure cassée : ${h.steps.join(" | ")}`);
+      // Une case exclue de la zone ou ligne regardée est toujours justifiée (barrée ou interdite par un envahisseur).
+      if (h.technique === "Ligne ou zone réservée" && h.steps[0].includes(" : ")) assert.match(h.steps[0], /barrée|envahisseur/);
+      if (h.kind === "cross") h.cells.forEach(i => (cells[i] = CROSS));
+      else if (h.kind === "place") cells[h.cells[0]] = INVADER;
+      else cells[h.cells[0]] = EMPTY;
+    }
+  }
+});
