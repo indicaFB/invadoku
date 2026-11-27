@@ -142,6 +142,9 @@ h1{font:400 clamp(15px,4.4vw,20px)/1.2 var(--font-pixel);white-space:nowrap;marg
 .splash .btn{min-width:220px;font:400 13px/1.4 var(--font-pixel);padding:16px 20px;animation:pulse 1.2s steps(2) infinite}
 @keyframes pulse{50%{box-shadow:0 0 0 4px var(--line)}}
 .splash .small{margin:0}
+.lang-toggle{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:max(16px,env(safe-area-inset-right,0px));display:flex;border:2px solid var(--line);border-radius:10px;overflow:hidden}
+.lang-toggle button{font:400 11px/1 var(--font-pixel);padding:10px 12px;border:0;background:transparent;color:var(--muted);cursor:pointer}
+.lang-toggle button[aria-checked="true"]{background:var(--accent);color:var(--on-accent)}
 /* Construction de la grille */
 .grid.reveal .cell{animation:cellIn .42s steps(6) both;animation-delay:var(--d,0ms)}
 .grid.reveal .cell svg{animation:svgIn .42s steps(4) both;animation-delay:calc(var(--d,0ms) + .25s)}

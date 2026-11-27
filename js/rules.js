@@ -14,11 +14,12 @@ export function attacks(P, a, b) {
     (Math.abs(ra - rb) <= 1 && Math.abs(ca - cb) <= 1);
 }
 
+// Raison du conflit : "row" | "col" | "zone" | "near" (cases voisines).
 export function whyAttack(P, q, j) {
-  if (rowOf(P, q) === rowOf(P, j)) return "même ligne";
-  if (colOf(P, q) === colOf(P, j)) return "même colonne";
-  if (P.reg[q] === P.reg[j]) return "même zone";
-  return "case voisine";
+  if (rowOf(P, q) === rowOf(P, j)) return "row";
+  if (colOf(P, q) === colOf(P, j)) return "col";
+  if (P.reg[q] === P.reg[j]) return "zone";
+  return "near";
 }
 
 export const isComplete = (P, cells) => cells.filter(s => s === INVADER).length === P.n;

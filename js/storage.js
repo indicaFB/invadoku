@@ -9,6 +9,7 @@ export const defaultState = () => ({
   maxLevel: 1,
   bonus: { hint: 6 },
   learning: false, // mode Learning : indices illimités
+  lang: null,      // "fr" | "en" ; null = langue du navigateur
   game: null, // { sig, level, cells, err, hearts }
 });
 
@@ -19,6 +20,7 @@ export function migrate(raw) {
   // 1 → 2 : le Radar disparaît, ajout du mode Learning.
   s.schema = SCHEMA;
   s.learning = raw.learning === true;
+  s.lang = ["fr", "en"].includes(raw.lang) ? raw.lang : null;
   s.level = Math.max(1, s.level | 0);
   s.maxLevel = Math.max(s.level, s.maxLevel | 0);
   s.bonus = { hint: Number.isFinite(raw.bonus?.hint) ? raw.bonus.hint : defaultState().bonus.hint };

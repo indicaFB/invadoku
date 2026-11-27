@@ -5,6 +5,7 @@ import { findHint } from "./hints.js";
 import { INVADER_SVG, CROSS_SVG, HEART_SVG, hydrateIcons, difficultySVG } from "./sprites.js";
 import { loadState, saveState, defaultState } from "./storage.js";
 import { explode } from "./fx.js";
+import { t, setLang, getLang, detectLang, translatePage } from "./i18n.js";
 
 const $ = id => document.getElementById(id);
 const grid = $("grid");
@@ -62,9 +63,13 @@ function build() {
     return d;
   });
   $("counter").innerHTML = INVADER_SVG.repeat(n);
-  $("lvl").textContent = "Niv " + S.level;
   $("diff").innerHTML = difficultySVG(diffTier(P.score));
-  const label = `Difficulté : ${["facile", "moyenne", "difficile"][diffTier(P.score)]}`;
+  renderHeader();
+}
+
+function renderHeader() {
+  $("lvl").textContent = t("level.short", { n: S.level });
+  const label = t("diff.label", { d: t(`diff.${diffTier(P.score)}`) });
   $("diff").title = label;
   $("diff").setAttribute("aria-label", label);
 }
@@ -74,8 +79,8 @@ function renderCell(i) {
   const err = S.game.err.includes(i);
   d.className = "cell" + (s === INVADER ? " inv" : "") + (s === LOCKED ? " auto" : "") + (err ? " err" : "");
   d.innerHTML = s === INVADER ? INVADER_SVG : s === CROSS || s === LOCKED ? CROSS_SVG : "";
-  d.setAttribute("aria-label", `Ligne ${rowOf(P, i) + 1}, colonne ${colOf(P, i) + 1}` +
-    (s === INVADER ? ", envahisseur" : s ? ", croix" : ""));
+  d.setAttribute("aria-label", t("cell", { r: rowOf(P, i) + 1, c: colOf(P, i) + 1 }) +
+    (s === INVADER ? t("cell.invader") : s ? t("cell.cross") : ""));
 }
 
 function render() { P.reg.forEach((_, i) => renderCell(i)); renderHUD(); }
@@ -202,7 +207,7 @@ function setPanel({ title, look, steps = null, tip = null, stage }) {
   (steps || []).forEach(t => { const li = document.createElement("li"); li.textContent = t; $("explainSteps").appendChild(li); });
   $("explainTip").hidden = !tip;
   $("explainTip").innerHTML = "";
-  if (tip) { const b = document.createElement("b"); b.textContent = "À retenir : "; $("explainTip").append(b, tip); }
+  if (tip) { const b = document.createElement("b"); b.textContent = t("hint.tip"); $("explainTip").append(b, tip); }
   $("explainSelf").hidden = $("explainMore").hidden = stage !== "look";
   $("explainOk").hidden = stage !== "steps";
   $("explain").hidden = false;
@@ -212,7 +217,7 @@ function showLook(h) {
   clearHint();
   h.focus.forEach(i => cellEls[i].classList.add("focus"));
   grid.classList.add("has-focus");
-  setPanel({ title: "", look: `${h.look} Une déduction s'y cache.`, stage: "look" });
+  setPanel({ title: "", look: `${h.look} ${t("hint.lookSuffix")}`, stage: "look" });
 }
 function showSteps(h) {
   const G = S.game;
@@ -230,15 +235,15 @@ function showSteps(h) {
 $("bHint").onclick = () => {
   if (S.game.hearts <= 0) return;
   if (pendingHint && pendingHint.level === S.level && pendingHint.sig === boardSig()) return showSteps(pendingHint.hint);
-  if (!S.learning && !S.bonus.hint) return toast("Plus d'indice disponible. Le mode Learning, dans le menu, les rend illimités.");
-  const hint = findHint(P, S.game.cells);
+  if (!S.learning && !S.bonus.hint) return toast(t("hint.none"));
+  const hint = findHint(P, S.game.cells, getLang());
   if (!S.learning) S.bonus.hint--;
   renderHUD(); save();
   pendingHint = { hint, sig: boardSig(), level: S.level };
   showLook(hint);
 };
 $("explainMore").onclick = () => { if (pendingHint) showSteps(pendingHint.hint); };
-$("explainSelf").onclick = () => { $("explain").hidden = true; document.body.classList.remove("hint-open"); toast("Touchez Indice pour revoir l'explication"); };
+$("explainSelf").onclick = () => { $("explain").hidden = true; document.body.classList.remove("hint-open"); toast(t("hint.again")); };
 $("explainOk").onclick = clearHint;
 
 /* ---------- Fenêtres ---------- */
@@ -263,12 +268,12 @@ function win() {
   S.maxLevel = Math.max(S.maxLevel, S.level);
   S.game = null;
   save();
-  const parts = !S.learning && r.hint ? ["+1 Indice"] : [];
+  const parts = !S.learning && r.hint ? [t("win.reward")] : [];
   const show = () => {
-    openModal(`<div class="big-inv">${INVADER_SVG}</div><h2>Niveau ${level} réussi</h2>
-      ${perfect ? '<p class="small">Sans faute</p>' : ""}
+    openModal(`<div class="big-inv">${INVADER_SVG}</div><h2>${t("win.title", { n: level })}</h2>
+      ${perfect ? `<p class="small">${t("win.perfect")}</p>` : ""}
       <div class="reward">${parts.map(p => `<span>${p}</span>`).join("")}</div>
-      <button class="btn" id="next">Niveau ${level + 1}</button>`, { lock: true });
+      <button class="btn" id="next">${t("win.next", { n: level + 1 })}</button>`, { lock: true });
     $("next").onclick = () => { closeModal(); startLevel(S.level); };
   };
   if (perfect && !reducedMotion()) setTimeout(show, explode($("fx"), invaders));
@@ -276,8 +281,8 @@ function win() {
 }
 
 function lose() {
-  openModal(`<h2>Plus de vies</h2><p class="small">Les envahisseurs ont gagné cette manche. La grille reste la même.</p>
-    <button class="btn" id="retry">Recommencer le niveau ${S.level}</button>`, { lock: true });
+  openModal(`<h2>${t("lose.title")}</h2><p class="small">${t("lose.text")}</p>
+    <button class="btn" id="retry">${t("lose.retry", { n: S.level })}</button>`, { lock: true });
   $("retry").onclick = () => { closeModal(); newGame(); render(); };
 }
 
@@ -290,15 +295,9 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") setMenu(fals
 
 function showRules(onClose) {
   setMenu(false);
-  openModal(`<h2>Règles</h2><ul>
-    <li>Placez un envahisseur par <b>ligne</b>, par <b>colonne</b> et par <b>zone de couleur</b>.</li>
-    <li>Deux envahisseurs ne se touchent jamais, même en diagonale.</li>
-    <li>1 tap : croix. 2<sup>e</sup> tap sur une croix : envahisseur.</li>
-    <li>Glissez le doigt pour poser ou retirer des croix en série.</li>
-    <li>Un envahisseur mal placé coûte une vie. 3 vies par niveau. Sans faute, les envahisseurs explosent.</li>
-    <li><b>Indice</b> montre d'abord où regarder, puis le raisonnement pas à pas.</li>
-    <li><b>Mode Learning</b> (menu) : indices illimités pour apprendre les déductions.</li>
-    </ul><button class="btn" id="ok">Compris</button>`);
+  openModal(`<h2>${t("rules.title")}</h2><ul>
+    ${[1, 2, 3, 4, 5, 6, 7].map(k => `<li>${t(`rules.${k}`)}</li>`).join("")}
+    </ul><button class="btn" id="ok">${t("hint.ok")}</button>`);
   $("ok").onclick = () => { closeModal(); onClose?.(); };
 }
 $("btnRules").onclick = () => showRules();
@@ -307,20 +306,20 @@ $("btnLearning").onclick = () => {
   setMenu(false);
   S.learning = !S.learning;
   save(); renderHUD();
-  toast(S.learning ? "Mode Learning activé : indices illimités" : "Mode Learning désactivé");
+  toast(t(S.learning ? "learning.on" : "learning.off"));
 };
 
 $("btnSettings").onclick = () => {
   setMenu(false);
-  openModal(`<h2>Réglages</h2>
-    <div class="row"><label for="optLvl">Aller au niveau (max ${S.maxLevel})</label>
+  openModal(`<h2>${t("settings.title")}</h2>
+    <div class="row"><label for="optLvl">${t("settings.goto", { n: S.maxLevel })}</label>
       <input type="number" id="optLvl" min="1" max="${S.maxLevel}" value="${S.level}"></div>
-    <button class="btn" id="go">Valider</button>
-    <button class="btn ghost" id="restart">Recommencer ce niveau</button>
-    <button class="btn ghost" id="reset">Réinitialiser la progression</button>
-    <div id="confirm" hidden><p class="small">Tout effacer : niveaux et bonus ?</p>
-      <div class="row"><button class="btn ghost" id="no">Annuler</button><button class="btn danger" id="yes">Effacer</button></div></div>
-    <p class="small">Version ${document.documentElement.dataset.version || ""}</p>`);
+    <button class="btn" id="go">${t("settings.go")}</button>
+    <button class="btn ghost" id="restart">${t("settings.restart")}</button>
+    <button class="btn ghost" id="reset">${t("settings.reset")}</button>
+    <div id="confirm" hidden><p class="small">${t("settings.confirm")}</p>
+      <div class="row"><button class="btn ghost" id="no">${t("settings.cancel")}</button><button class="btn danger" id="yes">${t("settings.erase")}</button></div></div>
+    <p class="small">${t("settings.version", { v: document.documentElement.dataset.version || "" })}</p>`);
   $("go").onclick = () => {
     const v = Math.max(1, Math.min(S.maxLevel, parseInt($("optLvl").value, 10) || 1));
     closeModal();
@@ -329,7 +328,7 @@ $("btnSettings").onclick = () => {
   $("restart").onclick = () => { closeModal(); newGame(); render(); };
   $("reset").onclick = () => { $("confirm").hidden = false; };
   $("no").onclick = () => { $("confirm").hidden = true; };
-  $("yes").onclick = () => { S = defaultState(); save(); closeModal(); startLevel(1); };
+  $("yes").onclick = () => { const lang = S.lang; S = defaultState(); S.lang = lang; save(); closeModal(); startLevel(1); };
 };
 
 /* ---------- Écran d'accueil ---------- */
@@ -341,7 +340,10 @@ function setupSplash(firstVisit) {
   const zones = [0, 0, 1, 1, 0, 0, 1, 1, 3, 2, 2, 1, 3, 2, 2, 2], inv = [1, 7, 8, 14];
   $("splashGrid").innerHTML = zones.map((g, i) =>
     `<i style="--rc:var(--r${g + 1});animation-delay:${(i % 5) * 0.3}s">${inv.includes(i) ? INVADER_SVG : ""}</i>`).join("");
-  $("play").textContent = S.level > 1 ? `Jouer · Niveau ${S.level}` : "Jouer";
+  renderPlayLabel();
+  document.querySelectorAll(".lang-toggle button").forEach(b => {
+    b.onclick = () => { S.lang = b.dataset.lang; save(); applyLang(); };
+  });
   $("play").onclick = () => {
     const sp = $("splash");
     sp.classList.add("out");
@@ -350,10 +352,27 @@ function setupSplash(firstVisit) {
   };
 }
 
+function renderPlayLabel() {
+  $("play").textContent = S.level > 1 ? t("splash.playLevel", { n: S.level }) : t("splash.play");
+}
+
+/* ---------- Langue ---------- */
+function applyLang() {
+  setLang(S.lang || detectLang());
+  translatePage();
+  document.querySelectorAll(".lang-toggle button").forEach(b => b.setAttribute("aria-checked", String(b.dataset.lang === getLang())));
+  document.querySelector('meta[name="description"]')?.setAttribute("content", t("app.description"));
+  pendingHint = null; // un indice déjà calculé est dans l'ancienne langue
+  if (P) { renderHeader(); render(); }
+  renderPlayLabel();
+}
+
 /* ---------- Démarrage ---------- */
 hydrateIcons();
+setLang(S.lang || detectLang());
 startLevel(S.level, { animate: false }); // la vague part quand l'écran d'accueil se ferme
 setupSplash(S.level === 1 && S.game.cells.every(s => s === EMPTY));
+applyLang();
 
 if ("serviceWorker" in navigator && location.protocol !== "file:" && document.documentElement.dataset.build !== "artifact") {
   navigator.serviceWorker.register("./sw.js").catch(() => { /* hors-ligne indisponible */ });

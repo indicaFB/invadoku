@@ -18,7 +18,7 @@ Rien ici n'est urgent : c'est la liste à cocher avant une sortie publique.
 - [ ] **Polices** : licence SIL OFL 1.1, fichiers de licence dans `fonts/`. Rien d'autre à faire.
 - [ ] **Confidentialité** : le jeu ne collecte rien et ne contacte aucun serveur. Rédiger une page courte qui le dit (exigée par les stores).
 - [ ] **Accessibilité** : vérifier la lisibilité des couleurs de zones pour les daltoniens (ajouter un motif par zone si besoin).
-- [ ] **Langues** : textes en français uniquement. Isoler les textes dans un fichier si une version anglaise est prévue.
+- [x] **Langues** : français et anglais (`js/i18n.js`, phrases des indices dans `js/hints.js`). Le manifeste (nom, description) reste en français.
 
 ## 3. Stores (plus tard)
 

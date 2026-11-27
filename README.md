@@ -1,6 +1,6 @@
 # Invadoku
 
-Puzzle logique en pixel art. Placez un envahisseur par ligne, par colonne et par zone de couleur ; deux envahisseurs ne se touchent jamais, même en diagonale.
+Puzzle logique en pixel art, en français et en anglais (choix sur l'écran d'accueil). Placez un envahisseur par ligne, par colonne et par zone de couleur ; deux envahisseurs ne se touchent jamais, même en diagonale.
 
 Application web installable (PWA) : écran d'accueil, plein écran, jeu hors ligne. Aucune dépendance, aucun service extérieur, aucune donnée collectée.
 
@@ -10,7 +10,7 @@ Node.js 18 ou plus.
 
 ```bash
 npm start          # http://localhost:8080
-npm test           # 22 tests : générateur, difficulté, indices, sauvegarde
+npm test           # 25 tests : générateur, difficulté, indices, sauvegarde
 npm run icons      # régénère les icônes PNG depuis le sprite
 npm run artifact   # dist/invadoku.html : le jeu en une seule page (aperçu claude.ai)
 ```
@@ -37,7 +37,8 @@ js/
   generator.js        grilles à solution unique (graine fixe par niveau)
   rater.js            note de difficulté (coût des déductions)
   levels.js           progression : taille par tranche, difficulté montante
-  hints.js            indice en deux temps : où regarder, puis raisonnement pas à pas
+  hints.js            indice en deux temps : où regarder, puis raisonnement pas à pas (FR et EN)
+  i18n.js             textes de l'interface en français et en anglais
   rules.js            règles et états de case
   sprites.js          sprites pixel en SVG
   storage.js          sauvegarde locale versionnée (migrate)
