@@ -29,10 +29,19 @@ const STRINGS = {
     "rules.7": "<b>Mode Learning</b> (menu) : indices illimités pour apprendre les déductions.",
     "settings.title": "Réglages", "settings.goto": "Aller au niveau (max {n})", "settings.go": "Valider",
     "settings.restart": "Recommencer ce niveau", "settings.reset": "Réinitialiser la progression",
-    "settings.confirm": "Tout effacer : niveaux et indices ?", "settings.cancel": "Annuler", "settings.erase": "Effacer",
+    "settings.confirm": "Tout effacer : niveaux, indices et stats ?", "settings.cancel": "Annuler", "settings.erase": "Effacer",
     "settings.version": "Version {v}",
     "splash.play": "Jouer", "splash.playLevel": "Jouer · Niveau {n}", "splash.tagline": "Un envahisseur par ligne, colonne et zone",
     "splash.lang": "Langue",
+    "menu.stats": "Stats",
+    "stats.title": "Stats", "stats.empty": "Réussissez une grille pour lancer vos stats. Elles comptent à partir de cette version.",
+    "stats.streak": "Série", "stats.best": "Record : {v}", "stats.found": "Envahisseurs trouvés",
+    "stats.attempts": "Essais par grille", "stats.solved": "Grilles réussies", "stats.perfect": "Sans faute : {v}",
+    "stats.hints": "Indices par grille", "stats.hintsLearning": "Dont Learning : {v}",
+    "stats.times": "Temps par taille", "stats.size": "Grille", "stats.avg": "Moyen", "stats.bestTime": "Meilleur", "stats.count": "Grilles",
+    "stats.errors": "Erreurs sur les {n} dernières grilles", "stats.errorsHint": "Chaque barre = une grille. Plus c'est bas, mieux c'est.",
+    "days.one": "{n} jour", "days.other": "{n} jours", "tries.one": "{n} essai", "tries.other": "{n} essais",
+    "win.summary": "Série : {streak} · {time} · {tries}",
   },
   en: {
     "app.description": "Pixel-art logic puzzle: one invader per row, column and zone.",
@@ -59,10 +68,19 @@ const STRINGS = {
     "rules.7": "<b>Learning mode</b> (menu): unlimited hints to learn the deductions.",
     "settings.title": "Settings", "settings.goto": "Go to level (max {n})", "settings.go": "Go",
     "settings.restart": "Restart this level", "settings.reset": "Reset progress",
-    "settings.confirm": "Erase everything: levels and hints?", "settings.cancel": "Cancel", "settings.erase": "Erase",
+    "settings.confirm": "Erase everything: levels, hints and stats?", "settings.cancel": "Cancel", "settings.erase": "Erase",
     "settings.version": "Version {v}",
     "splash.play": "Play", "splash.playLevel": "Play · Level {n}", "splash.tagline": "One invader per row, column and zone",
     "splash.lang": "Language",
+    "menu.stats": "Stats",
+    "stats.title": "Stats", "stats.empty": "Complete a grid to start your stats. They count from this version on.",
+    "stats.streak": "Streak", "stats.best": "Best: {v}", "stats.found": "Invaders found",
+    "stats.attempts": "Attempts per grid", "stats.solved": "Grids completed", "stats.perfect": "Flawless: {v}",
+    "stats.hints": "Hints per grid", "stats.hintsLearning": "Learning: {v}",
+    "stats.times": "Time by size", "stats.size": "Grid", "stats.avg": "Average", "stats.bestTime": "Best", "stats.count": "Grids",
+    "stats.errors": "Mistakes over the last {n} grids", "stats.errorsHint": "Each bar = one grid. Lower is better.",
+    "days.one": "{n} day", "days.other": "{n} days", "tries.one": "{n} attempt", "tries.other": "{n} attempts",
+    "win.summary": "Streak: {streak} · {time} · {tries}",
   },
 };
 
@@ -76,6 +94,11 @@ export function detectLang() {
   const nav = (globalThis.navigator?.language || "fr").toLowerCase();
   return nav.startsWith("fr") ? "fr" : "en";
 }
+
+// Pluriel : clés « x.one » et « x.other ».
+export const tn = (key, n) => t(`${key}.${n === 1 ? "one" : "other"}`, { n });
+export const fmt = (v, digits = 1) => new Intl.NumberFormat(current, { maximumFractionDigits: digits }).format(v);
+export const pct = v => new Intl.NumberFormat(current, { style: "percent", maximumFractionDigits: 0 }).format(v);
 
 export function t(key, params = {}) {
   const s = STRINGS[current][key] ?? STRINGS.fr[key] ?? key;

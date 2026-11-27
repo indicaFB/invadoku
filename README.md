@@ -10,7 +10,7 @@ Node.js 18 ou plus.
 
 ```bash
 npm start          # http://localhost:8080
-npm test           # 25 tests : générateur, difficulté, indices, sauvegarde
+npm test           # 33 tests : générateur, difficulté, indices, sauvegarde
 npm run icons      # régénère les icônes PNG depuis le sprite
 npm run artifact   # dist/invadoku.html : le jeu en une seule page (aperçu claude.ai)
 ```
@@ -39,6 +39,7 @@ js/
   levels.js           progression : taille par tranche, difficulté montante
   hints.js            indice en deux temps : où regarder, puis raisonnement pas à pas (FR et EN)
   i18n.js             textes de l'interface en français et en anglais
+  stats.js            statistiques du joueur (série, essais, temps, erreurs)
   rules.js            règles et états de case
   sprites.js          sprites pixel en SVG
   storage.js          sauvegarde locale versionnée (migrate)

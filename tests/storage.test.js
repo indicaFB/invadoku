@@ -8,6 +8,12 @@ test("sans sauvegarde : état de départ", () => {
   assert.deepEqual(load(memory()), defaultState());
 });
 
+test("anciennes sauvegardes : stats vides ajoutées", () => {
+  const m = migrate({ schema: 2, level: 5, bonus: { hint: 3 } });
+  assert.equal(m.stats.solved, 0);
+  assert.equal(m.stats.streak.best, 0);
+});
+
 test("sauvegarde puis relecture", () => {
   const st = memory(), s = defaultState();
   s.level = 12; s.maxLevel = 14; s.bonus.hint = 2; s.learning = true;

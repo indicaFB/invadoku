@@ -6,6 +6,7 @@ const ICONS = {
   menu: ["XXXXXXX", ".......", "XXXXXXX", ".......", "XXXXXXX"],
   info: [".XXXXX.", "XX.X.XX", "XXXXXXX", "XX..XXX", "XXX.XXX", "XXX.XXX", ".XXXXX."],
   gear: ["..X.X..", ".XXXXX.", "XXX.XXX", "XX...XX", "XXX.XXX", ".XXXXX.", "..X.X.."],
+  chart: ["......X", "....X.X", "..X.X.X", "X.X.X.X", "X.X.X.X", "XXXXXXX"],
   learn: ["XXX.XXX", "X.XXX.X", "X..X..X", "X..X..X", "X..X..X", "XXXXXXX"],
   bulb: ["...XXXX...", "..X....X..", ".X..X...X.", ".X.X....X.", ".X......X.", "..X....X..", "...X..X...", "...XXXX...", "..........", "...XXXX...", "....XX...."],
 };

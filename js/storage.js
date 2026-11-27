@@ -1,7 +1,9 @@
 // Sauvegarde locale versionnée. Toute évolution du format passe par migrate(),
 // pour qu'une mise à jour du jeu ne fasse pas perdre la progression.
+import { emptyStats } from "./stats.js";
+
 const KEY = "invadoku";
-export const SCHEMA = 2;
+export const SCHEMA = 3;
 
 export const defaultState = () => ({
   schema: SCHEMA,
@@ -10,6 +12,7 @@ export const defaultState = () => ({
   bonus: { hint: 6 },
   learning: false, // mode Learning : indices illimités
   lang: null,      // "fr" | "en" ; null = langue du navigateur
+  stats: emptyStats(),
   game: null, // { sig, level, cells, err, hearts }
 });
 
@@ -18,9 +21,12 @@ export function migrate(raw) {
   const s = { ...defaultState(), ...raw };
   // Conversions, dans l'ordre des schémas :
   // 1 → 2 : le Radar disparaît, ajout du mode Learning.
+  // 2 → 3 : ajout des statistiques (vides au départ).
   s.schema = SCHEMA;
   s.learning = raw.learning === true;
   s.lang = ["fr", "en"].includes(raw.lang) ? raw.lang : null;
+  const st = raw.stats && typeof raw.stats === "object" ? raw.stats : {};
+  s.stats = { ...emptyStats(), ...st, streak: { ...emptyStats().streak, ...(st.streak || {}) }, time: { ...(st.time || {}) } };
   s.level = Math.max(1, s.level | 0);
   s.maxLevel = Math.max(s.level, s.maxLevel | 0);
   s.bonus = { hint: Number.isFinite(raw.bonus?.hint) ? raw.bonus.hint : defaultState().bonus.hint };

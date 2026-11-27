@@ -6,7 +6,7 @@ import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 
 const root = new URL("../", import.meta.url);
 const read = p => readFileSync(new URL(p, root), "utf8");
-const MODULES = ["generator", "rater", "levels", "rules", "hints", "i18n", "sprites", "storage", "fx", "app"];
+const MODULES = ["generator", "rater", "levels", "rules", "hints", "i18n", "sprites", "stats", "storage", "fx", "app"];
 
 const js = MODULES.map(m => {
   const src = read(`js/${m}.js`)

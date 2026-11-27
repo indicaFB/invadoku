@@ -5,7 +5,8 @@ import { findHint } from "./hints.js";
 import { INVADER_SVG, CROSS_SVG, HEART_SVG, hydrateIcons, difficultySVG } from "./sprites.js";
 import { loadState, saveState, defaultState } from "./storage.js";
 import { explode } from "./fx.js";
-import { t, setLang, getLang, detectLang, translatePage } from "./i18n.js";
+import { t, tn, fmt, pct, setLang, getLang, detectLang, translatePage } from "./i18n.js";
+import { newRun, recordWin, summary, formatTime, currentStreak, HISTORY } from "./stats.js";
 
 const $ = id => document.getElementById(id);
 const grid = $("grid");
@@ -14,19 +15,38 @@ const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").match
 let S = loadState();
 let P = null;          // grille courante { n, reg, sol, score, level }
 let cellEls = [];
-const save = () => saveState(S);
+const save = () => { tickTime(); saveState(S); };
 
 /* ---------- Partie ---------- */
-function newGame() {
-  S.game = { sig: P.reg.join(""), level: S.level, cells: new Array(P.n * P.n).fill(EMPTY), err: [], hearts: 3 };
+// retry : même grille, nouvel essai (les compteurs de la grille sont conservés).
+function newGame({ retry = false } = {}) {
+  const run = retry && S.game?.run ? { ...S.game.run, attempts: S.game.run.attempts + 1 } : newRun();
+  S.game = { sig: P.reg.join(""), level: S.level, cells: new Array(P.n * P.n).fill(EMPTY), err: [], hearts: 3, run };
   save();
 }
+
+// Temps de jeu actif : page visible, écran d'accueil fermé, et un geste il y a moins de 90 s.
+const timer = { running: false, last: 0, lastInput: 0 };
+function tickTime() {
+  const now = Date.now();
+  if (timer.running && S.game?.run && now - timer.lastInput < 90000) S.game.run.ms += Math.min(now - timer.last, 90000);
+  timer.last = now;
+}
+function startTimer() { timer.running = true; timer.last = timer.lastInput = Date.now(); }
+document.addEventListener("visibilitychange", () => {
+  tickTime();
+  timer.running = !document.hidden && $("splash").hidden;
+  save();
+});
+document.addEventListener("pointerdown", () => { tickTime(); timer.lastInput = Date.now(); }, true);
+setInterval(tickTime, 5000);
 
 function startLevel(level, { animate = true } = {}) {
   clearHint();
   S.level = level;
   P = puzzleFor(level);
   if (!S.game || S.game.level !== level || S.game.sig !== P.reg.join("")) newGame();
+  S.game.run ||= newRun(); // partie commencée avant les stats
   build();
   render();
   if (animate) reveal();
@@ -130,7 +150,8 @@ function flashCollected(k) {
 function attempt(i) {
   const G = S.game;
   if (G.hearts <= 0) return;
-  if (isSolution(P, i)) { place(i); return; }
+  if (isSolution(P, i)) { S.stats.invadersFound++; place(i); return; }
+  G.run.errors++;
   G.hearts--;
   G.cells[i] = LOCKED;
   G.err.push(i);
@@ -238,6 +259,8 @@ $("bHint").onclick = () => {
   if (!S.learning && !S.bonus.hint) return toast(t("hint.none"));
   const hint = findHint(P, S.game.cells, getLang());
   if (!S.learning) S.bonus.hint--;
+  S.game.run.hints++;
+  if (S.learning) S.game.run.hintsLearning++;
   renderHUD(); save();
   pendingHint = { hint, sig: boardSig(), level: S.level };
   showLook(hint);
@@ -260,7 +283,10 @@ modal.addEventListener("click", e => { if (e.target === modal && !modal.dataset.
 export const rewardFor = level => ({ hint: level % 2 === 0 ? 1 : 0 });
 
 function win() {
-  const level = S.level, r = rewardFor(level), perfect = S.game.hearts === 3;
+  tickTime();
+  const level = S.level, r = rewardFor(level), run = S.game.run, perfect = run.errors === 0; // aucune erreur, tous essais confondus
+  S.stats = recordWin(S.stats, { level, n: P.n, run, perfect });
+  const recap = t("win.summary", { streak: tn("days", currentStreak(S.stats)), time: formatTime(run.ms), tries: tn("tries", run.attempts) });
   const invaders = cellEls.filter(d => d.classList.contains("inv"));
   grid.classList.add("won");
   if (!S.learning) S.bonus.hint += r.hint;
@@ -272,6 +298,7 @@ function win() {
   const show = () => {
     openModal(`<div class="big-inv">${INVADER_SVG}</div><h2>${t("win.title", { n: level })}</h2>
       ${perfect ? `<p class="small">${t("win.perfect")}</p>` : ""}
+      <p class="small">${recap}</p>
       <div class="reward">${parts.map(p => `<span>${p}</span>`).join("")}</div>
       <button class="btn" id="next">${t("win.next", { n: level + 1 })}</button>`, { lock: true });
     $("next").onclick = () => { closeModal(); startLevel(S.level); };
@@ -283,7 +310,7 @@ function win() {
 function lose() {
   openModal(`<h2>${t("lose.title")}</h2><p class="small">${t("lose.text")}</p>
     <button class="btn" id="retry">${t("lose.retry", { n: S.level })}</button>`, { lock: true });
-  $("retry").onclick = () => { closeModal(); newGame(); render(); };
+  $("retry").onclick = () => { closeModal(); newGame({ retry: true }); render(); };
 }
 
 /* ---------- Menu ---------- */
@@ -309,6 +336,43 @@ $("btnLearning").onclick = () => {
   toast(t(S.learning ? "learning.on" : "learning.off"));
 };
 
+/* ---------- Stats ---------- */
+// Barres pixel : une par grille, hauteur = erreurs (plafonnée à 6), vert si aucune erreur.
+function errorChart(errors) {
+  const W = HISTORY * 3, H = 7;
+  const bars = errors.map((e, k) => {
+    const h = Math.min(e, 6) + 1, color = e === 0 ? "#5FD068" : e <= 2 ? "#FFA53D" : "#FF5A6E";
+    return `<rect x="${k * 3}" y="${H - h}" width="2" height="${h}" fill="${color}"/>`;
+  }).join("");
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" shape-rendering="crispEdges" role="img"
+    aria-label="${errors.join(", ")}"><rect x="0" y="${H - 0.15}" width="${W}" height="0.15" fill="var(--line)"/>${bars}</svg>`;
+}
+
+function showStats() {
+  setMenu(false);
+  tickTime();
+  const m = summary(S.stats), none = "–";
+  const kpi = (v, l, sub = "", wide = false) =>
+    `<div class="kpi${wide ? " wide" : ""}"><span class="v">${v}</span><span class="l">${l}</span>${sub ? `<span class="s">${sub}</span>` : ""}</div>`;
+  const times = m.times.length ? `<h3>${t("stats.times")}</h3>
+    <table class="times"><tr><th>${t("stats.size")}</th><th>${t("stats.avg")}</th><th>${t("stats.bestTime")}</th><th>${t("stats.count")}</th></tr>
+    ${m.times.map(x => `<tr><td>${x.n}×${x.n}</td><td>${formatTime(x.avg)}</td><td>${formatTime(x.best)}</td><td>${x.count}</td></tr>`).join("")}</table>` : "";
+  const chart = m.errors.length ? `<h3>${t("stats.errors", { n: m.errors.length })}</h3>${errorChart(m.errors)}<p class="small">${t("stats.errorsHint")}</p>` : "";
+  openModal(`<h2>${t("stats.title")}</h2>
+    ${m.solved ? "" : `<p class="small">${t("stats.empty")}</p>`}
+    <div class="kpis">
+      ${kpi(tn("days", m.streak), t("stats.streak"), t("stats.best", { v: tn("days", m.bestStreak) }))}
+      ${kpi(fmt(m.invadersFound, 0), t("stats.found"))}
+      ${kpi(m.avgAttempts === null ? none : fmt(m.avgAttempts), t("stats.attempts"))}
+      ${kpi(fmt(m.solved, 0), t("stats.solved"), m.perfectRate === null ? "" : t("stats.perfect", { v: pct(m.perfectRate) }))}
+      ${kpi(m.avgHints === null ? none : fmt(m.avgHints), t("stats.hints"), m.hintsLearning ? t("stats.hintsLearning", { v: m.hintsLearning }) : "", true)}
+    </div>
+    ${times}${chart}
+    <button class="btn" id="ok">${t("hint.ok")}</button>`);
+  $("ok").onclick = closeModal;
+}
+$("btnStats").onclick = showStats;
+
 $("btnSettings").onclick = () => {
   setMenu(false);
   openModal(`<h2>${t("settings.title")}</h2>
@@ -325,7 +389,7 @@ $("btnSettings").onclick = () => {
     closeModal();
     if (v !== S.level) { S.game = null; startLevel(v); }
   };
-  $("restart").onclick = () => { closeModal(); newGame(); render(); };
+  $("restart").onclick = () => { closeModal(); newGame({ retry: true }); render(); };
   $("reset").onclick = () => { $("confirm").hidden = false; };
   $("no").onclick = () => { $("confirm").hidden = true; };
   $("yes").onclick = () => { const lang = S.lang; S = defaultState(); S.lang = lang; save(); closeModal(); startLevel(1); };
@@ -347,6 +411,7 @@ function setupSplash(firstVisit) {
   $("play").onclick = () => {
     const sp = $("splash");
     sp.classList.add("out");
+    startTimer();
     if (!firstVisit) reveal();
     setTimeout(() => { sp.hidden = true; if (firstVisit) showRules(reveal); }, 350);
   };
