@@ -30,3 +30,11 @@ test("stockage indisponible : pas d'erreur", () => {
   assert.deepEqual(load(broken), defaultState());
   assert.doesNotThrow(() => save(defaultState(), broken));
 });
+
+test("reprend la sauvegarde de la première version", () => {
+  const st = memory();
+  st.setItem("invasion_logique_v1", JSON.stringify({ level: 9, maxLevel: 9, bonus: { s: 12, h: 7, g: 1 }, game: null }));
+  const s = load(st);
+  assert.equal(s.level, 9);
+  assert.deepEqual(s.bonus, { radar: 12, hint: 7 });
+});

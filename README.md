@@ -10,7 +10,7 @@ Node.js 18 ou plus.
 
 ```bash
 npm start          # http://localhost:8080
-npm test           # 21 tests : générateur, difficulté, indices, sauvegarde
+npm test           # 22 tests : générateur, difficulté, indices, sauvegarde
 npm run icons      # régénère les icônes PNG depuis le sprite
 npm run artifact   # dist/invadoku.html : le jeu en une seule page (aperçu claude.ai)
 ```

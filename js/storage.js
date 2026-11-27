@@ -22,8 +22,20 @@ export function migrate(raw) {
   return s;
 }
 
+// Sauvegarde de la toute première version (artifact « Invasion Logique ») : bonus s/h au lieu de radar/hint.
+const LEGACY_KEY = "invasion_logique_v1";
+function fromLegacy(old) {
+  if (!old || typeof old !== "object") return null;
+  return { level: old.level, maxLevel: old.maxLevel, game: old.game || null,
+    bonus: { radar: old.bonus?.s ?? 5, hint: old.bonus?.h ?? 6 } };
+}
+
 export function loadState(storage = globalThis.localStorage) {
-  try { return migrate(JSON.parse(storage.getItem(KEY))); } catch { return defaultState(); }
+  try {
+    const raw = storage.getItem(KEY);
+    if (raw) return migrate(JSON.parse(raw));
+    return migrate(fromLegacy(JSON.parse(storage.getItem(LEGACY_KEY))));
+  } catch { return defaultState(); }
 }
 
 export function saveState(state, storage = globalThis.localStorage) {
