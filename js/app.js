@@ -21,13 +21,27 @@ function newGame() {
   save();
 }
 
-function startLevel(level) {
+function startLevel(level, { animate = true } = {}) {
   clearHint();
   S.level = level;
   P = puzzleFor(level);
   if (!S.game || S.game.level !== level || S.game.sig !== P.reg.join("")) newGame();
   build();
   render();
+  if (animate) reveal();
+}
+
+// Construction de la grille : les cases apparaissent en vague diagonale depuis le coin haut gauche.
+const REVEAL_STEP = 45, REVEAL_CELL = 420; // ms entre deux diagonales, durée d'une case
+let revealTimer;
+function reveal() {
+  if (reducedMotion()) return;
+  cellEls.forEach((d, i) => d.style.setProperty("--d", `${(rowOf(P, i) + colOf(P, i)) * REVEAL_STEP}ms`));
+  grid.classList.remove("reveal");
+  void grid.offsetWidth; // relance l'animation
+  grid.classList.add("reveal");
+  clearTimeout(revealTimer);
+  revealTimer = setTimeout(() => grid.classList.remove("reveal"), (2 * P.n - 2) * REVEAL_STEP + REVEAL_CELL + 50);
 }
 
 /* ---------- Rendu ---------- */
@@ -241,7 +255,7 @@ btnMenu.onclick = e => { e.stopPropagation(); setMenu(menu.hidden); };
 document.addEventListener("click", e => { if (!menu.hidden && !e.target.closest(".menu-wrap")) setMenu(false); });
 document.addEventListener("keydown", e => { if (e.key === "Escape") setMenu(false); });
 
-function showRules() {
+function showRules(onClose) {
   setMenu(false);
   openModal(`<h2>Règles</h2><ul>
     <li>Placez un envahisseur par <b>ligne</b>, par <b>colonne</b> et par <b>zone de couleur</b>.</li>
@@ -251,9 +265,9 @@ function showRules() {
     <li>Un envahisseur mal placé coûte une vie. 3 vies par niveau. Sans faute, les envahisseurs explosent.</li>
     <li><b>Radar</b> barre 5 cases vides. <b>Indice</b> montre la prochaine déduction et l'explique.</li>
     </ul><button class="btn" id="ok">Compris</button>`);
-  $("ok").onclick = closeModal;
+  $("ok").onclick = () => { closeModal(); onClose?.(); };
 }
-$("btnRules").onclick = showRules;
+$("btnRules").onclick = () => showRules();
 
 $("btnSettings").onclick = () => {
   setMenu(false);
@@ -290,13 +304,14 @@ function setupSplash(firstVisit) {
   $("play").onclick = () => {
     const sp = $("splash");
     sp.classList.add("out");
-    setTimeout(() => { sp.hidden = true; if (firstVisit) showRules(); }, 350);
+    if (!firstVisit) reveal();
+    setTimeout(() => { sp.hidden = true; if (firstVisit) showRules(reveal); }, 350);
   };
 }
 
 /* ---------- Démarrage ---------- */
 hydrateIcons();
-startLevel(S.level);
+startLevel(S.level, { animate: false }); // la vague part quand l'écran d'accueil se ferme
 setupSplash(S.level === 1 && S.game.cells.every(s => s === EMPTY));
 
 if ("serviceWorker" in navigator && location.protocol !== "file:") {

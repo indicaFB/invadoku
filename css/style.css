@@ -121,4 +121,9 @@ h1{font:400 clamp(13px,3.8vw,18px)/1.2 var(--font-pixel);white-space:nowrap;marg
 .splash .btn{min-width:220px;font:400 13px/1.4 var(--font-pixel);padding:16px 20px;animation:pulse 1.2s steps(2) infinite}
 @keyframes pulse{50%{box-shadow:0 0 0 4px var(--line)}}
 .splash .small{margin:0}
+/* Construction de la grille */
+.grid.reveal .cell{animation:cellIn .42s steps(6) both;animation-delay:var(--d,0ms)}
+.grid.reveal .cell svg{animation:svgIn .42s steps(4) both;animation-delay:calc(var(--d,0ms) + .25s)}
+@keyframes cellIn{0%{transform:scale(0);opacity:0;background:var(--line)}35%{transform:scale(.55);opacity:1;background:var(--line)}70%{transform:scale(1.12);background:#FFFFFF}100%{transform:scale(1);opacity:1;background:var(--rc)}}
+@keyframes svgIn{from{opacity:0}to{opacity:1}}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
