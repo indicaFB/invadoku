@@ -83,10 +83,12 @@ function renderHUD() {
   [...$("hearts").children].forEach((el, k) => { if (k >= h) el.classList.add("lost"); });
   const placed = S.game.cells.filter(s => s === INVADER).length;
   [...$("counter").children].forEach((el, k) => el.classList.toggle("off", k >= placed));
-  $("cSearch").textContent = S.bonus.radar;
-  $("cHint").textContent = S.bonus.hint;
-  $("bSearch").classList.toggle("empty", !S.bonus.radar);
-  $("bHint").classList.toggle("empty", !S.bonus.hint);
+  $("cHint").textContent = S.learning ? "∞" : S.bonus.hint;
+  $("bHint").classList.toggle("empty", !S.learning && !S.bonus.hint);
+  $("learnTag").hidden = !S.learning;
+  $("learningState").textContent = S.learning ? "ON" : "OFF";
+  $("learningState").classList.toggle("on", S.learning);
+  $("btnLearning").setAttribute("aria-checked", String(S.learning));
 }
 
 let toastTimer;
@@ -176,19 +178,7 @@ grid.addEventListener("pointerup", () => {
 });
 grid.addEventListener("pointercancel", () => { drag = null; save(); });
 
-/* ---------- Bonus ---------- */
-$("bSearch").onclick = () => {
-  if (!S.bonus.radar) return toast("Plus de radar disponible");
-  const G = S.game, cand = [];
-  G.cells.forEach((s, i) => { if ((s === EMPTY || s === CROSS) && !isSolution(P, i)) cand.push(i); });
-  if (!cand.length) return toast("Aucune case à barrer");
-  cand.sort(() => Math.random() - 0.5).slice(0, 5).forEach(i => {
-    G.cells[i] = LOCKED; renderCell(i); cellEls[i].classList.add("hint");
-  });
-  S.bonus.radar--;
-  renderHUD(); save();
-  toast("Radar : cases sans envahisseur barrées");
-};
+/* ---------- Indice ---------- */
 
 // Indice en deux temps : 1) où regarder (on peut chercher seul), 2) le raisonnement pas à pas.
 // Un indice payé reste disponible gratuitement tant que la grille n'a pas changé.
@@ -237,9 +227,9 @@ function showSteps(h) {
 $("bHint").onclick = () => {
   if (S.game.hearts <= 0) return;
   if (pendingHint && pendingHint.level === S.level && pendingHint.sig === boardSig()) return showSteps(pendingHint.hint);
-  if (!S.bonus.hint) return toast("Plus d'indice disponible");
+  if (!S.learning && !S.bonus.hint) return toast("Plus d'indice disponible. Le mode Learning, dans le menu, les rend illimités.");
   const hint = findHint(P, S.game.cells);
-  S.bonus.hint--;
+  if (!S.learning) S.bonus.hint--;
   renderHUD(); save();
   pendingHint = { hint, sig: boardSig(), level: S.level };
   showLook(hint);
@@ -258,24 +248,19 @@ function openModal(html, { lock = false } = {}) {
 function closeModal() { modal.hidden = true; modal.dataset.lock = ""; }
 modal.addEventListener("click", e => { if (e.target === modal && !modal.dataset.lock) closeModal(); });
 
-export function rewardFor(level) {
-  const r = { radar: 0, hint: 0 };
-  if (level % 2 === 0) r.radar = 1;
-  if (level % 3 === 0) r.hint = 1;
-  if (!r.radar && !r.hint) r.radar = 1;
-  return r;
-}
+// +1 indice tous les 2 niveaux (le mode Learning n'en a pas besoin).
+export const rewardFor = level => ({ hint: level % 2 === 0 ? 1 : 0 });
 
 function win() {
   const level = S.level, r = rewardFor(level), perfect = S.game.hearts === 3;
   const invaders = cellEls.filter(d => d.classList.contains("inv"));
   grid.classList.add("won");
-  S.bonus.radar += r.radar; S.bonus.hint += r.hint;
+  if (!S.learning) S.bonus.hint += r.hint;
   S.level = level + 1;
   S.maxLevel = Math.max(S.maxLevel, S.level);
   S.game = null;
   save();
-  const parts = [r.radar && "+1 Radar", r.hint && "+1 Indice"].filter(Boolean);
+  const parts = !S.learning && r.hint ? ["+1 Indice"] : [];
   const show = () => {
     openModal(`<div class="big-inv">${INVADER_SVG}</div><h2>Niveau ${level} réussi</h2>
       ${perfect ? '<p class="small">Sans faute</p>' : ""}
@@ -308,11 +293,19 @@ function showRules(onClose) {
     <li>1 tap : croix. 2<sup>e</sup> tap sur une croix : envahisseur.</li>
     <li>Glissez le doigt pour poser ou retirer des croix en série.</li>
     <li>Un envahisseur mal placé coûte une vie. 3 vies par niveau. Sans faute, les envahisseurs explosent.</li>
-    <li><b>Radar</b> barre 5 cases vides. <b>Indice</b> montre d'abord où regarder, puis le raisonnement pas à pas.</li>
+    <li><b>Indice</b> montre d'abord où regarder, puis le raisonnement pas à pas.</li>
+    <li><b>Mode Learning</b> (menu) : indices illimités pour apprendre les déductions.</li>
     </ul><button class="btn" id="ok">Compris</button>`);
   $("ok").onclick = () => { closeModal(); onClose?.(); };
 }
 $("btnRules").onclick = () => showRules();
+
+$("btnLearning").onclick = () => {
+  setMenu(false);
+  S.learning = !S.learning;
+  save(); renderHUD();
+  toast(S.learning ? "Mode Learning activé : indices illimités" : "Mode Learning désactivé");
+};
 
 $("btnSettings").onclick = () => {
   setMenu(false);

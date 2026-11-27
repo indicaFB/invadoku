@@ -10,7 +10,7 @@ test("sans sauvegarde : état de départ", () => {
 
 test("sauvegarde puis relecture", () => {
   const st = memory(), s = defaultState();
-  s.level = 12; s.maxLevel = 14; s.bonus.radar = 2;
+  s.level = 12; s.maxLevel = 14; s.bonus.hint = 2; s.learning = true;
   save(s, st);
   assert.deepEqual(load(st), s);
 });
@@ -19,10 +19,11 @@ test("données abîmées ou incomplètes : on repart proprement", () => {
   const st = memory();
   st.setItem("invadoku", "{pas du json");
   assert.deepEqual(load(st), defaultState());
-  const m = migrate({ level: 7, bonus: { radar: 1 } });
+  const m = migrate({ schema: 1, level: 7, bonus: { radar: 1 } });
   assert.equal(m.schema, SCHEMA);
   assert.equal(m.maxLevel, 7);
-  assert.deepEqual(m.bonus, { radar: 1, hint: 6 });
+  assert.deepEqual(m.bonus, { hint: 6 }, "le Radar disparaît");
+  assert.equal(m.learning, false);
 });
 
 test("stockage indisponible : pas d'erreur", () => {
@@ -36,5 +37,5 @@ test("reprend la sauvegarde de la première version", () => {
   st.setItem("invasion_logique_v1", JSON.stringify({ level: 9, maxLevel: 9, bonus: { s: 12, h: 7, g: 1 }, game: null }));
   const s = load(st);
   assert.equal(s.level, 9);
-  assert.deepEqual(s.bonus, { radar: 12, hint: 7 });
+  assert.deepEqual(s.bonus, { hint: 7 });
 });

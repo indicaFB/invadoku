@@ -1,5 +1,5 @@
 // Règles de base, sans état. P = { n, reg, sol }.
-// États de case : 0 vide, 1 croix du joueur, 2 croix verrouillée (erreur ou Radar), 3 envahisseur.
+// États de case : 0 vide, 1 croix du joueur, 2 croix verrouillée (erreur), 3 envahisseur.
 export const EMPTY = 0, CROSS = 1, LOCKED = 2, INVADER = 3;
 
 export const rowOf = (P, i) => (i / P.n) | 0;
