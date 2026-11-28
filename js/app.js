@@ -15,7 +15,7 @@ const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").match
 let S = loadState();
 let P = null;          // grille courante { n, reg, sol, score, level }
 let cellEls = [];
-const save = () => { tickTime(); saveState(S); };
+const save = () => { tickTime(); saveState(S); checkFollow(); };
 
 /* ---------- Partie ---------- */
 // retry : même grille, nouvel essai (les compteurs de la grille sont conservés).
@@ -43,6 +43,7 @@ setInterval(tickTime, 5000);
 
 function startLevel(level, { animate = true } = {}) {
   clearHint();
+  followHint = null;
   S.level = level;
   P = puzzleFor(level);
   if (!S.game || S.game.level !== level || S.game.sig !== P.reg.join("")) newGame();
@@ -260,18 +261,28 @@ function showLook(h) {
   grid.classList.add("has-focus");
   setPanel({ title: "", look: `${h.look} ${t("hint.lookSuffix")}`, stage: "look" });
 }
+// L'explication ne touche pas la grille : le joueur applique lui-même la déduction (preuve qu'il a compris).
+// followHint suit cette déduction ; quand elle est appliquée, un message le confirme.
+let followHint = null;
+function hintApplied(h, cells) {
+  if (h.kind === "cross") return h.cells.every(i => cells[i] === CROSS || cells[i] === LOCKED);
+  if (h.kind === "place") return cells[h.cells[0]] === INVADER;
+  return cells[h.cells[0]] !== CROSS; // fix : croix retirée
+}
+function checkFollow() {
+  if (!followHint || !S.game || followHint.level !== S.level) return;
+  if (!hintApplied(followHint.hint, S.game.cells)) return;
+  toast(t("hint.applied"));
+  followHint = null;
+}
 function showSteps(h) {
-  const G = S.game;
-  pendingHint = null;
-  if (h.kind === "fix") { G.cells[h.cells[0]] = EMPTY; renderCell(h.cells[0]); }
-  else if (h.kind === "cross") h.cells.forEach(i => { G.cells[i] = CROSS; renderCell(i); });
-  save();
-  if (h.kind === "place") place(h.cells[0]);
+  followHint = { hint: h, level: S.level };
   clearHint();
   h.focus.forEach(i => cellEls[i].classList.add("focus"));
   h.cells.forEach(i => cellEls[i].classList.add("focus", "hl"));
   grid.classList.add("has-focus");
   setPanel({ title: `· ${h.technique}`, look: h.look, steps: h.steps, tip: h.tip, stage: "steps" });
+  $("explainOk").textContent = t("hint.myTurn");
 }
 $("bHint").onclick = () => {
   if (S.game.hearts <= 0) return;
