@@ -70,6 +70,8 @@ h1{font:400 clamp(15px,4.4vw,20px)/1.2 var(--font-pixel);white-space:nowrap;marg
 .cell.err{animation:shake .4s}
 .cell.inv svg{color:var(--ink);animation:pop .28s ease-out}
 .cell.hint{animation:glow 1s 2}
+.cell.tap{animation:tapflash .22s steps(3)}
+@keyframes tapflash{0%{filter:brightness(1.9)}100%{filter:none}}
 @keyframes pop{0%{transform:scale(.3)}70%{transform:scale(1.15)}100%{transform:scale(1)}}
 @keyframes shake{20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
 @keyframes glow{50%{filter:brightness(1.35)}}

@@ -162,10 +162,30 @@ function attempt(i) {
   if (G.hearts === 0) setTimeout(lose, 500);
 }
 
+// Change l'état d'une case avec un petit flash.
+function setCell(i, state) {
+  S.game.cells[i] = state;
+  renderCell(i);
+  const d = cellEls[i];
+  d.classList.remove("tap"); void d.offsetWidth; d.classList.add("tap");
+  d.addEventListener("animationend", () => d.classList.remove("tap"), { once: true });
+}
+
+// 1 tap : pose ou efface une croix. Double tap (< 300 ms, même case) : envahisseur.
+// Le 1er tap s'affiche tout de suite ; au 2e, la case reprend son état d'avant puis l'envahisseur est tenté.
+const DOUBLE_TAP = 300;
+let lastTap = null;
 function tap(i) {
-  const s = S.game.cells[i];
-  if (s === EMPTY) { S.game.cells[i] = CROSS; renderCell(i); save(); }
-  else if (s === CROSS) attempt(i);
+  const s = S.game.cells[i], now = performance.now();
+  if (lastTap && lastTap.i === i && now - lastTap.t < DOUBLE_TAP) {
+    const prev = lastTap.prev;
+    lastTap = null;
+    if (prev === EMPTY || prev === CROSS) { S.game.cells[i] = prev; attempt(i); }
+    return;
+  }
+  lastTap = { i, t: now, prev: s };
+  if (s === EMPTY) { setCell(i, CROSS); save(); }
+  else if (s === CROSS) { setCell(i, EMPTY); save(); }
   else if (s === LOCKED) {
     const d = cellEls[i];
     d.classList.remove("err"); void d.offsetWidth; d.classList.add("err");
@@ -173,7 +193,7 @@ function tap(i) {
   }
 }
 
-// Tap : croix puis envahisseur. Glisser : poser (depuis une case vide) ou retirer (depuis une croix) des croix en série.
+// Glisser : poser (depuis une case vide) ou retirer (depuis une croix) des croix en série.
 let drag = null;
 function cellAt(x, y) {
   const c = document.elementFromPoint(x, y)?.closest(".cell");
@@ -193,8 +213,8 @@ grid.addEventListener("pointermove", e => {
   if (i === null || i === drag.last) return;
   const apply = j => {
     const s = S.game.cells[j];
-    if (drag.mode === "paint" && s === EMPTY) { S.game.cells[j] = CROSS; renderCell(j); }
-    else if (drag.mode === "erase" && s === CROSS) { S.game.cells[j] = EMPTY; renderCell(j); }
+    if (drag.mode === "paint" && s === EMPTY) setCell(j, CROSS);
+    else if (drag.mode === "erase" && s === CROSS) setCell(j, EMPTY);
   };
   if (!drag.moved) { drag.moved = true; apply(drag.start); }
   apply(i);
