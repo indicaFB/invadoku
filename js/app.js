@@ -300,8 +300,10 @@ function win() {
       ${perfect ? `<p class="small">${t("win.perfect")}</p>` : ""}
       <p class="small">${recap}</p>
       <div class="reward">${parts.map(p => `<span>${p}</span>`).join("")}</div>
-      <button class="btn" id="next">${t("win.next", { n: level + 1 })}</button>`, { lock: true });
+      <button class="btn" id="next">${t("win.next", { n: level + 1 })}</button>
+      <button class="btn ghost" id="winStats">${t("win.stats")}</button>`, { lock: true });
     $("next").onclick = () => { closeModal(); startLevel(S.level); };
+    $("winStats").onclick = () => showStats(show); // « Compris » ramène à cette fenêtre
   };
   if (perfect && !reducedMotion()) setTimeout(show, explode($("fx"), invaders));
   else show();
@@ -348,7 +350,8 @@ function errorChart(errors) {
     aria-label="${errors.join(", ")}"><rect x="0" y="${H - 0.15}" width="${W}" height="0.15" fill="var(--line)"/>${bars}</svg>`;
 }
 
-function showStats() {
+// onClose : où revenir après « Compris » (fenêtre de fin de grille) ; sinon on ferme.
+function showStats(onClose) {
   setMenu(false);
   tickTime();
   const m = summary(S.stats), none = "–";
@@ -368,10 +371,10 @@ function showStats() {
       ${kpi(m.avgHints === null ? none : fmt(m.avgHints), t("stats.hints"), m.hintsLearning ? t("stats.hintsLearning", { v: m.hintsLearning }) : "", true)}
     </div>
     ${times}${chart}
-    <button class="btn" id="ok">${t("hint.ok")}</button>`);
-  $("ok").onclick = closeModal;
+    <button class="btn" id="ok">${t(onClose ? "stats.back" : "hint.ok")}</button>`, { lock: !!onClose });
+  $("ok").onclick = () => (onClose ? onClose() : closeModal());
 }
-$("btnStats").onclick = showStats;
+$("btnStats").onclick = () => showStats();
 
 $("btnSettings").onclick = () => {
   setMenu(false);

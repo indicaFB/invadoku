@@ -1,6 +1,6 @@
 {
   "name": "invadoku",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "private": true,
   "description": "Puzzle logique en pixel art : un envahisseur par ligne, colonne et zone.",
   "type": "module",
